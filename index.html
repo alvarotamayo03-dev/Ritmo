@@ -183,7 +183,6 @@
     .calendar-week-navigation { justify-content: center; margin: 5px 0 0; padding: 9px 0 2px; border-top: 1px solid #e0e8f2; }
     .calendar-grid.today-mode { grid-template-columns: minmax(0, 1fr); overflow: visible; }
     .calendar-grid.today-mode .day-column:not(.selected) { display: none; }
-    .calendar-week-hint { display: none; }
     .event.completed { opacity: .65; }
     .event.completed .event-title { text-decoration: line-through; }
     @media (pointer: coarse) {
@@ -637,7 +636,6 @@
       .calendar-grid.week-mode .event-actions button { min-height: 25px; padding: 2px 4px; font-size: 9px; }
       .calendar-grid.week-mode .daily-reading { gap: 4px; padding: 7px; }
       .calendar-grid.week-mode.is-dragging { cursor: grabbing; scroll-snap-type: none; user-select: none; }
-      .calendar-week-hint.visible { display: block; margin: -4px 2px 8px; color: #788493; font-size: 10px; }
       .day-column.today.selected { box-shadow: none; }
       .day-head { margin: 0 0 10px; padding: 2px 1px 8px; }
       .day-name { font-size: 11px; }
@@ -711,9 +709,6 @@
       }
       dialog::backdrop { background: rgba(26, 39, 32, .38); }
       .dialog-actions .button { min-height: 42px; }
-    }
-    @media (max-width: 920px) and (orientation: landscape) {
-      .calendar-week-hint.visible { display: none; }
     }
     @media (max-width: 660px) and (orientation: landscape) {
       .calendar-grid.week-mode {
@@ -967,7 +962,6 @@
     [data-theme="dark"] .goal-chart-label,
     [data-theme="dark"] .goal-chart-percent,
     [data-theme="dark"] .progress-sub,
-    [data-theme="dark"] .calendar-week-hint,
     [data-theme="dark"] .settings-goal-row small,
     [data-theme="dark"] .weekly-plan-status {
       color: var(--text-secondary);
@@ -1132,34 +1126,25 @@
     .calendar-grid.week-mode { max-height: min(70vh, 800px); overflow: auto; overscroll-behavior: contain; }
     .calendar-grid.week-mode .day-column { display: block; padding: 0; }
     .calendar-grid.week-mode .day-head { position: sticky; top: 0; z-index: 4; min-height: 48px; margin: 0; padding: 4px 8px 8px; background: var(--surface); }
-    .calendar-timeline { position: relative; height: 1728px; background: repeating-linear-gradient(to bottom, var(--border-subtle) 0 1px, transparent 1px 72px); }
-    .calendar-hour { position: absolute; left: 3px; z-index: 1; color: var(--text-secondary); font-size: 9px; line-height: 12px; pointer-events: none; }
-    .calendar-drop-marker { position: absolute; z-index: 3; left: 35px; right: 3px; border-top: 2px solid var(--accent); color: var(--accent); font-size: 11px; font-weight: 700; pointer-events: none; }
-    .calendar-grid.week-mode .calendar-timeline .event {
-      position: absolute; left: 36px; right: 3px; box-sizing: border-box; overflow: hidden;
-      margin: 0; padding: 2px 3px; border-radius: 6px;
-    }
     .calendar-grid.week-mode .calendar-timeline .event.is-selected { z-index: 5; overflow: visible; outline: 2px solid var(--accent); }
-    .event-resize-handle { display: none; }
-    .calendar-grid.week-mode .event.is-selected .event-resize-handle {
-      display: block; position: absolute; left: 20%; width: 60%; height: 22px;
-      padding: 0; border: 0; background: transparent; touch-action: none;
-    }
-    .event-resize-handle::after { content: ""; display: block; width: 30px; height: 5px; margin: auto; border-radius: 4px; background: var(--accent); }
-    .event-resize-handle[data-resize="start"] { top: -11px; }
-    .event-resize-handle[data-resize="end"] { bottom: -11px; }
-    .event.very-short .event-resize-handle[data-resize="start"] { left: 3%; width: 43%; }
-    .event.very-short .event-resize-handle[data-resize="end"] { left: 54%; width: 43%; }
-    .event.very-short .event-resize-handle::after { width: 20px; }
     .calendar-grid.week-mode .calendar-timeline .event.is-being-dragged { opacity: .35; }
-    .calendar-grid.week-mode .calendar-timeline .event + .event { margin-top: 0; }
-    .calendar-grid.week-mode .calendar-timeline .event-time,
-    .calendar-grid.week-mode .calendar-timeline .event-title { font-size: 10px; line-height: 13px; margin: 0; }
-    .calendar-grid.week-mode .calendar-timeline .event.very-short .event-time { display: none; }
-    .calendar-grid.week-mode .calendar-timeline .event.very-short .event-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-    .calendar-grid.week-mode .calendar-timeline .event-check-row,
     .calendar-grid.week-mode .calendar-timeline .event-actions { display: none; }
     .calendar-grid.week-mode .daily-reading { margin: 8px; }
+    .calendar-grid.week-mode .calendar-timeline { height: auto; min-height: 100px; padding: 8px; background: none; }
+    .calendar-grid.week-mode .calendar-timeline .event {
+      position: relative; inset: auto; height: auto; overflow: visible;
+      margin: 0 0 6px; padding: 9px; border-radius: 9px;
+    }
+    .calendar-grid.week-mode .calendar-timeline .event + .event { margin-top: 6px; }
+    .calendar-grid.week-mode .calendar-timeline .event-time,
+    .calendar-grid.week-mode .calendar-timeline .event-title { display: block; font-size: 13px; line-height: 1.35; white-space: normal; }
+    .calendar-grid.week-mode .calendar-timeline .event-check-row { display: flex; flex-wrap: wrap; margin-top: 8px; }
+    .calendar-grid.week-mode .calendar-timeline .event-hours { flex: 1 1 100%; }
+    .calendar-grid.week-mode .calendar-timeline .event-hours select { min-height: 36px; font-size: 12px; }
+    .calendar-grid.week-mode .calendar-timeline .event-hours label,
+    .calendar-grid.today-mode .event-hours label, #eventCompletionArea .event-hours label {
+      display: grid; width: 100%; gap: 3px; font-size: 11px;
+    }
     .topbar .calendar-view-toggle { flex: 0 0 auto; margin: 0 0 0 auto; }
     .app:not([data-active-view="calendario"]) .calendar-view-toggle { display: none; }
     .app[data-active-view="calendario"] .calendar-grid.week-mode {
@@ -1282,7 +1267,6 @@
         height: clamp(240px, calc(100vh - 180px - env(safe-area-inset-bottom)), 1100px);
         height: clamp(240px, calc(100dvh - 180px - env(safe-area-inset-bottom)), 1100px);
       }
-      .calendar-week-hint.visible { margin: 0 2px 6px; }
       .sidebar { padding: 6px 12px calc(6px + env(safe-area-inset-bottom)); }
       .nav button { min-height: 50px; border-radius: 14px; font-size: 11px; }
       .nav button.active { background: var(--accent-soft); color: var(--accent); }
@@ -1391,7 +1375,6 @@
 
       <section class="view active" id="view-calendario">
         <div class="mobile-day-picker" id="mobileDayPicker" aria-label="Elegir día"></div>
-        <div class="calendar-week-hint" id="calendarWeekHint">Mantén pulsado un bloque para moverlo o ajustar su duración.</div>
         <div class="calendar-grid" id="calendarGrid"></div>
         <div class="schedule-controls calendar-week-navigation">
           <button class="button small" id="prevWeek">← Semana anterior</button>
@@ -1527,7 +1510,12 @@
         <button class="button" type="button" id="showMoveEvent">Mover este bloque a otro día</button>
         <div id="moveEventFields" hidden>
           <div class="field"><label for="moveEventDate">Día de destino</label><input id="moveEventDate" type="date"></div>
-          <p class="summary-goal-hint">Se mueve solo esta aparición y se conserva la hora. Los bloques solapados se recortan. Los demás cambios del formulario no se guardan al mover.</p>
+          <div class="form-row">
+            <div class="field"><label for="moveEventStart">Desde</label><input id="moveEventStart" type="time"></div>
+            <div class="field"><label for="moveEventEnd">Hasta</label><input id="moveEventEnd" type="time"></div>
+          </div>
+          <div class="field"><label for="moveEventDuration">Duración</label><select id="moveEventDuration"></select></div>
+          <p class="summary-goal-hint">Se mueve solo esta aparición. Los bloques solapados se recortan. Los demás cambios del formulario no se guardan al mover.</p>
           <button class="button primary" type="button" id="confirmMoveEvent">Mover bloque</button>
           <p class="summary-goal-hint" id="moveEventStatus" role="status"></p>
         </div>
@@ -2053,6 +2041,13 @@
       return summaryLogsBetween(startOfPeriod(), endOfPeriod());
     }
 
+    function expandStudyLogs(logs) {
+      return logs.flatMap(log => log.hourSplit
+        ? ["study", "programming"].filter(category => Number(log.hourSplit[category]) > 0)
+          .map(category => ({ ...log, category, hours: Number(log.hourSplit[category]) }))
+        : [log]);
+    }
+
     function summaryLogsBetween(start, end) {
       const logs = state.logs.filter(log => {
         const date = parseDate(log.date);
@@ -2061,9 +2056,9 @@
       const scheduledHourLogs = new Set(logs
         .filter(log => log.done && log.sourceKey?.startsWith("schedule:") && ["study", "programming", "german"].includes(log.category))
         .map(log => `${log.date}:${log.category}`));
-      return logs.filter(log =>
+      return expandStudyLogs(logs.filter(log =>
         log.sourceKey || !scheduledHourLogs.has(`${log.date}:${log.category}`)
-      );
+      ));
     }
 
     function countGoal(goal, logs) {
@@ -2320,10 +2315,10 @@
       const chartStart = addDays(chartEnd, -6);
       const plannedActivities = periodMode === "week" ? plannedWeekActivities(chartStart) : [];
       const completed = periodMode === "week"
-        ? plannedActivities.map(item => item.log).filter(Boolean)
+        ? expandStudyLogs(plannedActivities.map(item => item.log).filter(Boolean))
         : currentPeriodSummaryLogs().filter(log => log.done);
       const chartLogs = periodMode === "week"
-        ? plannedActivities.map(item => item.log).filter(Boolean)
+        ? expandStudyLogs(plannedActivities.map(item => item.log).filter(Boolean))
         : summaryLogsBetween(chartStart, chartEnd).filter(log => log.done);
       const buckets = Array.from({ length: 7 }, (_, index) => {
         const date = addDays(chartStart, index);
@@ -2499,7 +2494,7 @@
         : `<div class="milestone-empty">Aún no hay metas.</div>`;
     }
 
-    let weeklyCalendarScrollTop = 6 * 72;
+    let weeklyCalendarScrollTop = 0;
     function renderCalendar() {
       const start = startOfWeek(calendarAnchor);
       document.getElementById("calendarTodayView").classList.toggle("active", calendarMode === "day");
@@ -2520,7 +2515,6 @@
       if (calendarGrid.classList.contains("week-mode")) weeklyCalendarScrollTop = calendarGrid.scrollTop;
       calendarGrid.classList.toggle("today-mode", calendarMode === "day");
       calendarGrid.classList.toggle("week-mode", calendarMode === "week");
-      document.getElementById("calendarWeekHint").classList.toggle("visible", calendarMode === "week");
       const previousScrollLeft = calendarGrid.scrollLeft;
       calendarGrid.innerHTML = DAYS.map((day, index) => {
         const date = addDays(start, index);
@@ -2528,7 +2522,7 @@
           .sort((a, b) => a.start.localeCompare(b.start));
         return `<article class="day-column ${dateKey(date) === today ? "today" : ""} ${index === selectedCalendarDay ? "selected" : ""}" data-calendar-date="${dateKey(date)}">
           <button type="button" class="day-head" data-add-event-date="${dateKey(date)}" aria-label="Añadir bloque el ${day} ${formatDate(date, { day: "numeric", month: "long" })}" title="Añadir bloque"><span class="day-name">${day}</span><span class="day-number">${formatDate(date, { day: "numeric", month: "short" })}</span></button>
-          ${calendarMode === "week" ? `<div class="calendar-timeline">${Array.from({ length: 24 }, (_, hour) => `<span class="calendar-hour" style="top:${hour * 72}px">${String(hour).padStart(2, "0")}:00</span>`).join("")}` : ""}
+          ${calendarMode === "week" ? `<div class="calendar-timeline">` : ""}
           ${events.length ? events.map(event => {
             const sourceKey = `schedule:${event.id}@${dateKey(date)}`;
               const category = scheduleCategory(event.title);
@@ -2541,28 +2535,27 @@
               const selectedHourCategory = hourCategories.some(option => option.value === scheduleLog?.category)
                 ? scheduleLog.category
                 : hourCategories[0]?.value || "";
+              const splitHours = scheduleLog?.hourSplit;
               const visualCategory = inferredActivityCategory(event) === "sport"
                 ? "training"
                 : completed && scheduleLog ? scheduleLog.category : category;
-              const startMinutes = Number(event.start.slice(0, 2)) * 60 + Number(event.start.slice(3));
-              const timelineStyle = calendarMode === "week"
-                ? `style="top:${startMinutes * 1.2}px;height:${maxDurationMinutes * 1.2}px"`
-                : "";
-              return `<div class="event ${completed ? "completed" : ""} ${maxDurationMinutes < 25 ? "very-short" : ""}" data-event-id="${escapeHtml(event.id)}" data-event-date="${dateKey(date)}" data-category="${visualCategory}" ${timelineStyle} title="Pulsa para editar este bloque">
+              return `<div class="event ${completed ? "completed" : ""} ${maxDurationMinutes < 25 ? "very-short" : ""}" data-event-id="${escapeHtml(event.id)}" data-event-date="${dateKey(date)}" data-category="${visualCategory}" title="Pulsa para editar este bloque">
               <div class="event-drag-area">
                 <div class="event-time">${escapeHtml(event.start)}–${escapeHtml(event.end)}</div>
                 <div class="event-title">${escapeHtml(event.title)}</div>
               </div>
-              <button type="button" class="event-resize-handle" data-resize="start" aria-label="Cambiar inicio de ${escapeHtml(event.title)}"></button>
-              <button type="button" class="event-resize-handle" data-resize="end" aria-label="Cambiar final de ${escapeHtml(event.title)}"></button>
               ${isTrackableScheduleCategory(logCategory) ? `<div class="event-check-row">
                 <label class="event-check"><input type="checkbox" aria-label="Marcar ${escapeHtml(event.title)} como completada" data-schedule-check="${escapeHtml(event.id)}" data-schedule-date="${dateKey(date)}" ${completed ? "checked" : ""}></label>
                 ${tracksHours ? `<div class="event-hours">
-                  ${hourCategories.length > 1 ? `<select aria-label="Tipo de horas para ${escapeHtml(event.title)}" data-schedule-category="${escapeHtml(event.id)}" data-schedule-date="${dateKey(date)}">${hourCategories.map(option => `<option value="${option.value}" ${option.value === selectedHourCategory ? "selected" : ""}>${option.label}</option>`).join("")}</select>` : ""}
+                  ${hourCategories.length > 1 ? `<select aria-label="Tipo de horas para ${escapeHtml(event.title)}" data-schedule-category="${escapeHtml(event.id)}" data-schedule-date="${dateKey(date)}">${hourCategories.map(option => `<option value="${option.value}" ${!splitHours && option.value === selectedHourCategory ? "selected" : ""}>${option.label}</option>`).join("")}<option value="both" ${splitHours ? "selected" : ""}>Uni y Programar</option></select>` : ""}
+                  ${splitHours ? hourCategories.map(option => `<label>${option.label}
+                    <select aria-label="Horas de ${option.label} en ${escapeHtml(event.title)}" data-schedule-split="${escapeHtml(event.id)}" data-split-category="${option.value}" data-schedule-date="${dateKey(date)}">
+                      <option value="0">0 min</option>${durationOptions(splitHours[option.value], maxDurationMinutes)}
+                    </select></label>`).join("") : `
                   <select id="hours-${escapeHtml(event.id)}-${dateKey(date)}" aria-label="Tiempo realizado en ${escapeHtml(event.title)}" data-schedule-hours="${escapeHtml(event.id)}" data-schedule-date="${dateKey(date)}">
                     <option value="" ${completed && Number(scheduleLog.hours || 0) === 0 ? "" : !completed ? "selected" : ""}></option>
                     ${durationOptions(completed ? scheduleLog.hours : 0, maxDurationMinutes)}
-                  </select>
+                  </select>`}
                 </div>` : ""}
               </div>` : ""}
               <div class="event-actions">
@@ -2711,7 +2704,7 @@
       document.getElementById("logPeriodHint").textContent = `${logs.length} registros`;
       const completed = currentPeriodSummaryLogs().filter(log => log.done);
       const weeklyActivities = periodMode === "week" ? plannedWeekActivities(start) : [];
-      const goalLogs = periodMode === "week" ? weeklyActivities.map(item => item.log).filter(Boolean) : completed;
+      const goalLogs = periodMode === "week" ? expandStudyLogs(weeklyActivities.map(item => item.log).filter(Boolean)) : completed;
       document.getElementById("summaryGoalHint").textContent = periodMode === "week"
         ? "Cada objetivo usa tu meta personal o el calendario actual; la planificación pasada puede haber cambiado."
         : "Completado frente a los objetivos configurados en Ajustes.";
@@ -2836,6 +2829,7 @@
       if (existing) {
         existing.done = true;
         existing.category = category;
+        if (categoryOverride) delete existing.hourSplit;
         if (hoursOverride !== null && ["study", "programming", "german"].includes(category)) existing.hours = hoursOverride;
         if (!["study", "programming", "german"].includes(category)) existing.hours = 0;
         if (["sport", "study", "none", "leisure", "other"].includes(event.activityCategory)) {
@@ -2903,6 +2897,14 @@
           state.logs = state.logs.filter(item => item !== log);
           return;
         }
+        if (log.hourSplit && hourCategories.some(option => option.value === "study") &&
+            hourCategories.some(option => option.value === "programming")) {
+          if (Number(log.hours || 0) * 60 > scheduledDurationMinutes(event)) {
+            delete log.sourceKey;
+            showNotice("Las horas registradas que superan la nueva duración se conservan en Actividad registrada.");
+          }
+          return;
+        }
         const categoryOverride = hourCategories.some(option => option.value === log.category) ? log.category : null;
         logForScheduleEvent(event, date, scheduledHours, categoryOverride);
       });
@@ -2940,13 +2942,51 @@
 
     function updateScheduledEventCategory(eventId, date, category) {
       const event = state.schedule.find(item => item.id === eventId);
-      if (!event || !scheduleHourCategories(event).some(option => option.value === category)) return;
-      const existing = state.logs.find(log => log.sourceKey === `schedule:${eventId}@${date}` && log.done);
-      if (existing) {
-        existing.category = category;
-        saveState();
+      if (!event) return;
+      const categories = scheduleHourCategories(event);
+      if (category === "both" && categories.some(option => option.value === "study") && categories.some(option => option.value === "programming")) {
+        const previousLogs = structuredClone(state.logs);
+        let log = state.logs.find(item => item.sourceKey === `schedule:${eventId}@${date}` && item.done);
+        if (!log) {
+          logForScheduleEvent(event, date, 0, "study");
+          log = state.logs.find(item => item.sourceKey === `schedule:${eventId}@${date}` && item.done);
+        }
+        log.hourSplit = { study: log.category === "study" ? Number(log.hours || 0) : 0, programming: log.category === "programming" ? Number(log.hours || 0) : 0 };
+        if (!saveState()) state.logs = previousLogs;
         render();
+      } else if (categories.some(option => option.value === category)) {
+        const existing = state.logs.find(log => log.sourceKey === `schedule:${eventId}@${date}` && log.done);
+        if (existing) {
+          const previousLogs = structuredClone(state.logs);
+          existing.category = category;
+          delete existing.hourSplit;
+          if (!saveState()) state.logs = previousLogs;
+          render();
+        }
       }
+    }
+
+    function updateScheduledSplitHours(eventId, date, category, value) {
+      const event = state.schedule.find(item => item.id === eventId);
+      const log = state.logs.find(item => item.sourceKey === `schedule:${eventId}@${date}` && item.done);
+      const hours = Number(value);
+      if (!event || !log?.hourSplit || !["study", "programming"].includes(category) ||
+          !Number.isFinite(hours) || hours < 0) {
+        showNotice("No se pudieron actualizar las horas del bloque.");
+        render();
+        return;
+      }
+      const other = category === "study" ? "programming" : "study";
+      if ((hours + Number(log.hourSplit[other])) * 60 > scheduledDurationMinutes(event) + 1e-8) {
+        showNotice("La suma de las horas no puede superar la duración del bloque.");
+        render();
+        return;
+      }
+      const previousLogs = structuredClone(state.logs);
+      log.hourSplit[category] = hours;
+      log.hours = log.hourSplit.study + log.hourSplit.programming;
+      if (!saveState()) state.logs = previousLogs;
+      render();
     }
 
     function toggleScheduledEvent(eventId, date, checked, categoryOverride) {
@@ -3103,6 +3143,7 @@
       const scheduleCheck = event.target.dataset.scheduleCheck;
       const scheduleHours = event.target.dataset.scheduleHours;
       const scheduleCategoryChoice = event.target.dataset.scheduleCategory;
+      const scheduleSplit = event.target.dataset.scheduleSplit;
       const scheduleDate = event.target.dataset.scheduleDate;
       if (taskId) {
         const task = state.tasks.find(item => item.id === taskId);
@@ -3126,8 +3167,19 @@
       } else if (scheduleHours && scheduleDate) {
         const categoryChoice = event.target.closest(".event").querySelector("[data-schedule-category]")?.value;
         updateScheduledEventHours(scheduleHours, scheduleDate, event.target.value, categoryChoice);
+      } else if (scheduleSplit && scheduleDate) {
+        updateScheduledSplitHours(scheduleSplit, scheduleDate, event.target.dataset.splitCategory, event.target.value);
       } else if (scheduleCategoryChoice && scheduleDate) {
         updateScheduledEventCategory(scheduleCategoryChoice, scheduleDate, event.target.value);
+      }
+      if (event.target.closest("#eventCompletionArea")) {
+        renderCalendar();
+        const id = document.getElementById("eventId").value;
+        const source = [...calendarGrid.querySelectorAll(".event")].find(element =>
+          element.dataset.eventId === id && element.dataset.eventDate === editingEventOccurrence);
+        const completionArea = document.getElementById("eventCompletionArea");
+        completionArea.innerHTML = `${source?.querySelector(".event-check-row")?.outerHTML || ""}${source?.querySelector(".event-actions")?.outerHTML || ""}`;
+        completionArea.querySelectorAll("[id]").forEach(element => element.removeAttribute("id"));
       }
     });
 
@@ -3396,6 +3448,32 @@
     document.getElementById("eventStart").addEventListener("change", updateEventDuration);
     document.getElementById("eventEnd").addEventListener("change", updateEventDuration);
 
+    function updateMoveDuration() {
+      const start = document.getElementById("moveEventStart").value;
+      const end = document.getElementById("moveEventEnd").value;
+      const select = document.getElementById("moveEventDuration");
+      const minutes = start && end ? scheduledDurationMinutes({ start, end }) : 0;
+      const custom = minutes > 0 && minutes <= 1425 && minutes % 15
+        ? `<option value="${minutes / 60}" selected>${formatDurationHours(minutes / 60)}</option>` : "";
+      select.innerHTML = `<option value="">Elegir duración</option>${custom}${durationOptions(minutes / 60, 1425)}`;
+      select.value = minutes > 0 ? String(minutes / 60) : "";
+    }
+
+    document.getElementById("moveEventDuration").addEventListener("change", event => {
+      const start = document.getElementById("moveEventStart").value;
+      if (!start || !event.target.value) return;
+      const end = Number(start.slice(0, 2)) * 60 + Number(start.slice(3)) + Number(event.target.value) * 60;
+      if (end >= 1440) {
+        document.getElementById("moveEventStatus").textContent = "La duración debe terminar antes de medianoche.";
+        updateMoveDuration();
+        return;
+      }
+      document.getElementById("moveEventEnd").value = `${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`;
+      document.getElementById("moveEventStatus").textContent = "";
+    });
+    document.getElementById("moveEventStart").addEventListener("change", updateMoveDuration);
+    document.getElementById("moveEventEnd").addEventListener("change", updateMoveDuration);
+
     function openEventDialog(item, selectedDate = null, selectedHour = null) {
       document.getElementById("eventDialogTitle").textContent = item ? "Editar bloque" : "Añadir bloque al horario";
       document.getElementById("eventId").value = item ? item.id : "";
@@ -3431,6 +3509,9 @@
       document.getElementById("moveEventFields").hidden = true;
       document.getElementById("moveEventStatus").textContent = "";
       document.getElementById("moveEventDate").value = editingEventOccurrence;
+      document.getElementById("moveEventStart").value = item?.start || "";
+      document.getElementById("moveEventEnd").value = item?.end || "";
+      updateMoveDuration();
       eventDialog.showModal();
     }
     document.getElementById("eventCompletionArea").addEventListener("click", event => {
@@ -3505,12 +3586,13 @@
         input.focus();
         return;
       }
-      if (input.value === editingEventOccurrence) {
-        status.textContent = "Elige un día diferente.";
-        input.focus();
+      const start = document.getElementById("moveEventStart").value;
+      const end = document.getElementById("moveEventEnd").value;
+      if (!start || !end || start >= end) {
+        status.textContent = "Elige una hora de inicio y una hora final posterior.";
         return;
       }
-      const result = moveScheduleOccurrence(document.getElementById("eventId").value, editingEventOccurrence, input.value);
+      const result = moveScheduleOccurrence(document.getElementById("eventId").value, editingEventOccurrence, input.value, start, end);
       if (!result.moved) {
         status.textContent = result.error || "No se pudo mover el bloque.";
         return;
@@ -3533,7 +3615,6 @@
       drag.source.classList.remove("is-being-dragged");
       drag.preview?.remove();
       drag.dropTarget?.classList.remove("drop-target");
-      drag.marker?.remove();
       return drag;
     }
 
@@ -3546,25 +3627,15 @@
       source?.classList.add("is-selected");
     }
 
-    function timeInMinutes(value) {
-      return Number(value.slice(0, 2)) * 60 + Number(value.slice(3));
-    }
-
-    function minutesAsTime(minutes) {
-      return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-    }
-
-    function startBlockTouch(source, touch, mode) {
+    function startBlockTouch(source, touch) {
       const item = state.schedule.find(event => event.id === source.dataset.eventId);
       if (!item) return;
       const bounds = source.getBoundingClientRect();
       activeBlockDrag = {
-        touchId: touch.identifier, source, mode, eventId: item.id, fromDate: source.dataset.eventDate,
+        touchId: touch.identifier, source, eventId: item.id, fromDate: source.dataset.eventDate,
         startX: touch.clientX, startY: touch.clientY, clientX: touch.clientX, clientY: touch.clientY,
         offsetX: touch.clientX - bounds.left, offsetY: touch.clientY - bounds.top,
-        originalStart: timeInMinutes(item.start), originalEnd: timeInMinutes(item.end),
-        startScrollTop: calendarGrid.scrollTop, moved: false, preview: null, dropTarget: null,
-        marker: null, scrollFrame: 0, dropStart: null, dropEnd: null
+        moved: false, preview: null, dropTarget: null, scrollFrame: 0
       };
       selectCalendarBlock(source);
       suppressBlockClickUntil = Date.now() + 1200;
@@ -3573,38 +3644,20 @@
     calendarGrid.addEventListener("touchstart", event => {
       if (calendarMode !== "week" || event.touches.length !== 1 || activeBlockDrag) return;
       const source = event.target.closest(".calendar-timeline .event");
-      const handle = event.target.closest("[data-resize]");
-      if (!source || (event.target.closest("button, input, select, label, a") && !handle)) {
+      if (!source || event.target.closest("button, input, select, label, a")) {
         selectCalendarBlock(null);
         return;
       }
       const touch = event.changedTouches[0];
-      if (handle && source === selectedBlock) {
-        startBlockTouch(source, touch, handle.dataset.resize);
-        event.preventDefault();
-        return;
-      }
       const id = touch.identifier;
       pendingBlockTouch = { id, x: touch.clientX, y: touch.clientY, source, timer: setTimeout(() => {
         if (!pendingBlockTouch || pendingBlockTouch.id !== id) return;
-        startBlockTouch(source, touch, "move");
+        startBlockTouch(source, touch);
         pendingBlockTouch = null;
       }, 1000) };
     }, { passive: false });
 
     function updateBlockDropTarget(drag) {
-      if (drag.mode !== "move") {
-        const change = Math.round(((drag.clientY - drag.startY) + calendarGrid.scrollTop - drag.startScrollTop) / 18) * 15;
-        const start = drag.mode === "start" ? Math.max(0, Math.min(drag.originalEnd - 15, drag.originalStart + change)) : drag.originalStart;
-        const end = drag.mode === "end" ? Math.min(1439, Math.max(drag.originalStart + 15, drag.originalEnd + change)) : drag.originalEnd;
-        drag.dropStart = minutesAsTime(start);
-        drag.dropEnd = minutesAsTime(end);
-        drag.dropTarget = drag.source.closest(".day-column");
-        drag.preview.style.top = `${drag.source.closest(".calendar-timeline").getBoundingClientRect().top + start * 1.2}px`;
-        drag.preview.style.height = `${(end - start) * 1.2}px`;
-        drag.preview.querySelector(".event-time").textContent = `${drag.dropStart}–${drag.dropEnd}`;
-        return;
-      }
       const target = document.elementFromPoint(drag.clientX, drag.clientY)?.closest(".day-column");
       const dropTarget = target && calendarGrid.contains(target) ? target : null;
       if (drag.dropTarget !== dropTarget) {
@@ -3612,31 +3665,12 @@
         drag.dropTarget = dropTarget;
         drag.dropTarget?.classList.add("drop-target");
       }
-      const timeline = dropTarget?.querySelector(".calendar-timeline");
-      const top = timeline?.getBoundingClientRect().top;
-      const bounds = timeline?.getBoundingClientRect();
-      const hour = bounds && drag.clientY >= bounds.top && drag.clientY <= bounds.bottom
-        ? Math.round((drag.clientY - drag.offsetY - top) / 72) : -1;
-      drag.dropStart = hour >= 0 && hour <= 23
-        ? `${String(hour).padStart(2, "0")}:00`
-        : null;
-      if (drag.dropStart) {
-        if (!drag.marker) {
-          drag.marker = document.createElement("div");
-          drag.marker.className = "calendar-drop-marker";
-        }
-        timeline.append(drag.marker);
-        drag.marker.style.top = `${hour * 72}px`;
-        drag.marker.textContent = drag.dropStart;
-      } else {
-        drag.marker?.remove();
-      }
     }
 
     function scrollBlockDrag(drag) {
       if (activeBlockDrag !== drag || !drag.moved) return;
       const bounds = calendarGrid.getBoundingClientRect();
-      if (drag.mode === "move" && drag.clientY >= bounds.top && drag.clientY <= bounds.bottom &&
+      if (drag.clientY >= bounds.top && drag.clientY <= bounds.bottom &&
           drag.clientX >= bounds.left && drag.clientX <= bounds.right) {
         if (drag.clientX < bounds.left + 32) calendarGrid.scrollLeft -= 8;
         else if (drag.clientX > bounds.right - 32) calendarGrid.scrollLeft += 8;
@@ -3683,10 +3717,8 @@
       }
       drag.clientX = touch.clientX;
       drag.clientY = touch.clientY;
-      if (drag.mode === "move") {
-        drag.preview.style.left = `${touch.clientX - drag.offsetX}px`;
-        drag.preview.style.top = `${touch.clientY - drag.offsetY}px`;
-      }
+      drag.preview.style.left = `${touch.clientX - drag.offsetX}px`;
+      drag.preview.style.top = `${touch.clientY - drag.offsetY}px`;
       updateBlockDropTarget(drag);
     }, { passive: false });
 
@@ -3702,22 +3734,20 @@
       suppressCalendarClick = true;
       setTimeout(() => { suppressCalendarClick = false; }, 0);
       const toDate = drag.dropTarget?.dataset.calendarDate;
-      if (!toDate || !drag.dropStart) {
-        showNotice("Suelta el bloque dentro de la cuadrícula horaria.");
+      if (!toDate) {
+        showNotice("Suelta el bloque sobre un día del calendario.");
         return;
       }
-      const result = moveScheduleOccurrence(drag.eventId, drag.fromDate, toDate, drag.dropStart, drag.dropEnd);
-      if (!result.moved) {
-        if (result.error !== "No se pudo guardar el cambio.") showNotice(result.error || "No se pudo mover el bloque.");
-        return;
-      }
-      selectedCalendarDay = (parseDate(toDate).getDay() + 6) % 7;
       selectCalendarBlock(null);
-      render();
-      const selected = [...calendarGrid.querySelectorAll(".event")].find(element =>
-        element.dataset.eventId === result.eventId && element.dataset.eventDate === toDate);
-      if (selected) selectCalendarBlock(selected);
-      if (result.archivedLogs) showNotice("Los registros que no caben en el bloque recortado se conservan en Actividad registrada.");
+      const item = state.schedule.find(entry => entry.id === drag.eventId);
+      if (!item) {
+        showNotice("No se encontró el bloque.");
+        return;
+      }
+      openEventDialog(item, drag.fromDate);
+      document.getElementById("moveEventDate").value = toDate;
+      document.getElementById("moveEventFields").hidden = false;
+      document.getElementById("moveEventStart").focus();
     });
 
     document.addEventListener("touchcancel", event => {
@@ -3737,13 +3767,6 @@
         event.stopPropagation();
         return;
       }
-      const handle = event.target.closest("[data-resize]");
-      if (handle) {
-        const block = handle.closest(".event");
-        const item = state.schedule.find(entry => entry.id === block.dataset.eventId);
-        if (item) openEventDialog(item, block.dataset.eventDate);
-        return;
-      }
       selectCalendarBlock(null);
       const addSlot = event.target.closest("[data-add-event-date]");
       if (addSlot) {
@@ -3759,9 +3782,7 @@
       }
       const dayColumn = event.target.closest(".day-column");
       if (dayColumn && !event.target.closest(".day-head, .event, .daily-reading")) {
-        const timeline = event.target.closest(".calendar-timeline");
-        const hour = timeline ? Math.max(0, Math.min(23, Math.floor((event.clientY - timeline.getBoundingClientRect().top) / 72))) : null;
-        openEventDialog(null, dayColumn.dataset.calendarDate, hour);
+        openEventDialog(null, dayColumn.dataset.calendarDate);
       }
     });
     document.getElementById("cancelEvent").addEventListener("click", () => eventDialog.close());
