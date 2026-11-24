@@ -189,7 +189,7 @@
     @media (pointer: coarse) {
       .event { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
     }
-    .calendar-grid.week-mode .event-drag-area { touch-action: none; }
+    .calendar-grid.week-mode .event { touch-action: auto; }
     .calendar-grid.week-mode.is-moving-block { scroll-snap-type: none; }
     .event.is-being-dragged { opacity: .3; }
     .event-drag-preview { position: fixed; z-index: 20; pointer-events: none; opacity: .92; box-shadow: 0 8px 24px #24364b33; transform: rotate(-2deg); }
@@ -1139,6 +1139,19 @@
       position: absolute; left: 36px; right: 3px; box-sizing: border-box; overflow: hidden;
       margin: 0; padding: 2px 3px; border-radius: 6px;
     }
+    .calendar-grid.week-mode .calendar-timeline .event.is-selected { z-index: 5; overflow: visible; outline: 2px solid var(--accent); }
+    .event-resize-handle { display: none; }
+    .calendar-grid.week-mode .event.is-selected .event-resize-handle {
+      display: block; position: absolute; left: 20%; width: 60%; height: 22px;
+      padding: 0; border: 0; background: transparent; touch-action: none;
+    }
+    .event-resize-handle::after { content: ""; display: block; width: 30px; height: 5px; margin: auto; border-radius: 4px; background: var(--accent); }
+    .event-resize-handle[data-resize="start"] { top: -11px; }
+    .event-resize-handle[data-resize="end"] { bottom: -11px; }
+    .event.very-short .event-resize-handle[data-resize="start"] { left: 3%; width: 43%; }
+    .event.very-short .event-resize-handle[data-resize="end"] { left: 54%; width: 43%; }
+    .event.very-short .event-resize-handle::after { width: 20px; }
+    .calendar-grid.week-mode .calendar-timeline .event.is-being-dragged { opacity: .35; }
     .calendar-grid.week-mode .calendar-timeline .event + .event { margin-top: 0; }
     .calendar-grid.week-mode .calendar-timeline .event-time,
     .calendar-grid.week-mode .calendar-timeline .event-title { font-size: 10px; line-height: 13px; margin: 0; }
@@ -1362,7 +1375,7 @@
           <button type="button" id="calendarWeekView" class="active" aria-pressed="true">Esta semana</button>
         </div>
         <div class="mobile-day-picker" id="mobileDayPicker" aria-label="Elegir día"></div>
-        <div class="calendar-week-hint" id="calendarWeekHint">Arrastra un bloque al día y hora deseados. Tócalo para editarlo o cambiar su duración.</div>
+        <div class="calendar-week-hint" id="calendarWeekHint">Mantén pulsado un bloque un segundo para moverlo. Suéltalo y arrastra sus extremos para ajustar la duración.</div>
         <div class="calendar-grid" id="calendarGrid"></div>
         <div class="schedule-controls calendar-week-navigation">
           <button class="button small" id="prevWeek">← Semana anterior</button>
@@ -2524,6 +2537,8 @@
                 <div class="event-time">${escapeHtml(event.start)}–${escapeHtml(event.end)}</div>
                 <div class="event-title">${escapeHtml(event.title)}</div>
               </div>
+              <button type="button" class="event-resize-handle" data-resize="start" aria-label="Cambiar inicio de ${escapeHtml(event.title)}"></button>
+              <button type="button" class="event-resize-handle" data-resize="end" aria-label="Cambiar final de ${escapeHtml(event.title)}"></button>
               ${isTrackableScheduleCategory(logCategory) ? `<div class="event-check-row">
                 <label class="event-check"><input type="checkbox" aria-label="Marcar ${escapeHtml(event.title)} como completada" data-schedule-check="${escapeHtml(event.id)}" data-schedule-date="${dateKey(date)}" ${completed ? "checked" : ""}></label>
                 ${tracksHours ? `<div class="event-hours">
@@ -3405,19 +3420,21 @@
     document.getElementById("eventCompletionArea").addEventListener("click", event => {
       if (event.target.closest("[data-delete-event]")) eventDialog.close();
     });
-    function moveScheduleOccurrence(eventId, fromDate, toDate, newStart = null) {
+    function moveScheduleOccurrence(eventId, fromDate, toDate, newStart = null, newEnd = null) {
       const event = state.schedule.find(item => item.id === eventId);
       if (!event) return { moved: false, error: "No se encontró el bloque." };
       if (!scheduleOccursOnDate(event, parseDate(fromDate))) return { moved: false, error: "El bloque ya no está en ese día." };
-      if (fromDate === toDate && (newStart === null || newStart === event.start)) return { moved: true, archivedLogs: 0 };
+      if (fromDate === toDate && (newStart === null || newStart === event.start) && (newEnd === null || newEnd === event.end)) return { moved: true, archivedLogs: 0, eventId };
       const duration = scheduledDurationMinutes(event);
       const startMinutes = newStart === null ? null : Number(newStart.slice(0, 2)) * 60 + Number(newStart.slice(3));
-      if (startMinutes !== null && (!Number.isFinite(startMinutes) || startMinutes < 0 || startMinutes + duration >= 1440)) {
+      const endMinutes = newEnd === null ? (startMinutes === null ? null : startMinutes + duration)
+        : Number(newEnd.slice(0, 2)) * 60 + Number(newEnd.slice(3));
+      if (startMinutes !== null && (!Number.isFinite(startMinutes) || !Number.isFinite(endMinutes) || startMinutes < 0 || endMinutes >= 1440 || endMinutes <= startMinutes)) {
         return { moved: false, error: "El bloque debe terminar antes de medianoche. Elige una hora anterior." };
       }
       const movedTimes = startMinutes === null ? {} : {
         start: newStart,
-        end: `${String(Math.floor((startMinutes + duration) / 60)).padStart(2, "0")}:${String((startMinutes + duration) % 60).padStart(2, "0")}`
+        end: `${String(Math.floor(endMinutes / 60)).padStart(2, "0")}:${String(endMinutes % 60).padStart(2, "0")}`
       };
       const targetDate = parseDate(toDate);
       const scheduleBefore = state.schedule.map(item => ({
@@ -3440,11 +3457,16 @@
         delete movedEvent.excludedDates;
         movedEventId = movedEvent.id;
       }
-      const { archivedLogs } = addScheduleBlock(movedEvent, { preserveConflictingLogs: true });
+      let { archivedLogs } = addScheduleBlock(movedEvent, { preserveConflictingLogs: true });
       const movedSourceKey = `schedule:${movedEventId}@${toDate}`;
       movedLogs.forEach(log => {
         log.date = toDate;
-        log.sourceKey = movedSourceKey;
+        if (Number(log.hours || 0) * 60 > scheduledDurationMinutes(movedEvent)) {
+          delete log.sourceKey;
+          archivedLogs += 1;
+        } else {
+          log.sourceKey = movedSourceKey;
+        }
       });
       state.logs.push(...movedLogs);
       if (!saveState()) {
@@ -3452,7 +3474,7 @@
         state.logs = logsBefore;
         return { moved: false, error: "No se pudo guardar el cambio." };
       }
-      return { moved: true, archivedLogs };
+      return { moved: true, archivedLogs, eventId: movedEventId };
     }
 
     document.getElementById("showMoveEvent").addEventListener("click", () => {
@@ -3499,31 +3521,74 @@
       return drag;
     }
 
-    calendarGrid.addEventListener("pointerdown", event => {
-      if (calendarMode !== "week" || !["touch", "pen"].includes(event.pointerType) || !event.isPrimary) return;
-      const source = event.target.closest(".event");
-      if (!source || event.target.closest("button, input, select, label, a")) return;
+    let selectedBlock = null;
+    let pendingBlockTouch = null;
+    let suppressBlockClickUntil = 0;
+    function selectCalendarBlock(source) {
+      selectedBlock?.classList.remove("is-selected");
+      selectedBlock = source;
+      source?.classList.add("is-selected");
+    }
+
+    function timeInMinutes(value) {
+      return Number(value.slice(0, 2)) * 60 + Number(value.slice(3));
+    }
+
+    function minutesAsTime(minutes) {
+      return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+    }
+
+    function startBlockTouch(source, touch, mode) {
+      const item = state.schedule.find(event => event.id === source.dataset.eventId);
+      if (!item) return;
+      const bounds = source.getBoundingClientRect();
       activeBlockDrag = {
-        pointerId: event.pointerId,
-        source,
-        eventId: source.dataset.eventId,
-        fromDate: source.dataset.eventDate,
-        startX: event.clientX,
-        startY: event.clientY,
-        offsetX: event.clientX - source.getBoundingClientRect().left,
-        offsetY: event.clientY - source.getBoundingClientRect().top,
-        moved: false,
-        preview: null,
-        dropTarget: null,
-        marker: null,
-        scrollFrame: 0,
-        dropStart: null,
-        clientX: event.clientX,
-        clientY: event.clientY
+        touchId: touch.identifier, source, mode, eventId: item.id, fromDate: source.dataset.eventDate,
+        startX: touch.clientX, startY: touch.clientY, clientX: touch.clientX, clientY: touch.clientY,
+        offsetX: touch.clientX - bounds.left, offsetY: touch.clientY - bounds.top,
+        originalStart: timeInMinutes(item.start), originalEnd: timeInMinutes(item.end),
+        startScrollTop: calendarGrid.scrollTop, moved: false, preview: null, dropTarget: null,
+        marker: null, scrollFrame: 0, dropStart: null, dropEnd: null
       };
-    });
+      selectCalendarBlock(source);
+      suppressBlockClickUntil = Date.now() + 1200;
+    }
+
+    calendarGrid.addEventListener("touchstart", event => {
+      if (calendarMode !== "week" || event.touches.length !== 1 || activeBlockDrag) return;
+      const source = event.target.closest(".calendar-timeline .event");
+      const handle = event.target.closest("[data-resize]");
+      if (!source || (event.target.closest("button, input, select, label, a") && !handle)) {
+        selectCalendarBlock(null);
+        return;
+      }
+      const touch = event.changedTouches[0];
+      if (handle && source === selectedBlock) {
+        startBlockTouch(source, touch, handle.dataset.resize);
+        event.preventDefault();
+        return;
+      }
+      const id = touch.identifier;
+      pendingBlockTouch = { id, x: touch.clientX, y: touch.clientY, source, timer: setTimeout(() => {
+        if (!pendingBlockTouch || pendingBlockTouch.id !== id) return;
+        startBlockTouch(source, touch, "move");
+        pendingBlockTouch = null;
+      }, 1000) };
+    }, { passive: false });
 
     function updateBlockDropTarget(drag) {
+      if (drag.mode !== "move") {
+        const change = Math.round(((drag.clientY - drag.startY) + calendarGrid.scrollTop - drag.startScrollTop) / 18) * 15;
+        const start = drag.mode === "start" ? Math.max(0, Math.min(drag.originalEnd - 15, drag.originalStart + change)) : drag.originalStart;
+        const end = drag.mode === "end" ? Math.min(1439, Math.max(drag.originalStart + 15, drag.originalEnd + change)) : drag.originalEnd;
+        drag.dropStart = minutesAsTime(start);
+        drag.dropEnd = minutesAsTime(end);
+        drag.dropTarget = drag.source.closest(".day-column");
+        drag.preview.style.top = `${drag.source.closest(".calendar-timeline").getBoundingClientRect().top + start * 1.2}px`;
+        drag.preview.style.height = `${(end - start) * 1.2}px`;
+        drag.preview.querySelector(".event-time").textContent = `${drag.dropStart}–${drag.dropEnd}`;
+        return;
+      }
       const target = document.elementFromPoint(drag.clientX, drag.clientY)?.closest(".day-column");
       const dropTarget = target && calendarGrid.contains(target) ? target : null;
       if (drag.dropTarget !== dropTarget) {
@@ -3555,7 +3620,7 @@
     function scrollBlockDrag(drag) {
       if (activeBlockDrag !== drag || !drag.moved) return;
       const bounds = calendarGrid.getBoundingClientRect();
-      if (drag.clientY >= bounds.top && drag.clientY <= bounds.bottom &&
+      if (drag.mode === "move" && drag.clientY >= bounds.top && drag.clientY <= bounds.bottom &&
           drag.clientX >= bounds.left && drag.clientX <= bounds.right) {
         if (drag.clientX < bounds.left + 32) calendarGrid.scrollLeft -= 8;
         else if (drag.clientX > bounds.right - 32) calendarGrid.scrollLeft += 8;
@@ -3566,18 +3631,30 @@
       drag.scrollFrame = requestAnimationFrame(() => scrollBlockDrag(drag));
     }
 
-    document.addEventListener("pointermove", event => {
+    document.addEventListener("touchmove", event => {
+      if (pendingBlockTouch) {
+        const touch = [...event.changedTouches].find(item => item.identifier === pendingBlockTouch.id);
+        if (touch && Math.hypot(touch.clientX - pendingBlockTouch.x, touch.clientY - pendingBlockTouch.y) > 8) {
+          clearTimeout(pendingBlockTouch.timer);
+          pendingBlockTouch = null;
+        }
+      }
       const drag = activeBlockDrag;
-      if (!drag || event.pointerId !== drag.pointerId) return;
-      const deltaX = event.clientX - drag.startX;
-      const deltaY = event.clientY - drag.startY;
+      const touch = drag && [...event.changedTouches].find(item => item.identifier === drag.touchId);
+      if (!touch) return;
+      event.preventDefault();
+      const deltaX = touch.clientX - drag.startX;
+      const deltaY = touch.clientY - drag.startY;
       if (!drag.moved && Math.hypot(deltaX, deltaY) < 8) return;
       if (!drag.moved) {
         drag.moved = true;
         const bounds = drag.source.getBoundingClientRect();
         drag.preview = drag.source.cloneNode(true);
         drag.preview.classList.remove("is-being-dragged");
+        drag.preview.classList.remove("is-selected");
         drag.preview.classList.add("event-drag-preview");
+        drag.preview.style.height = `${bounds.height}px`;
+        drag.preview.style.boxSizing = "border-box";
         drag.preview.setAttribute("aria-hidden", "true");
         drag.preview.querySelector(".event-actions")?.remove();
         drag.preview.style.width = `${bounds.width}px`;
@@ -3588,17 +3665,23 @@
         calendarGrid.classList.add("is-moving-block");
         drag.scrollFrame = requestAnimationFrame(() => scrollBlockDrag(drag));
       }
-      event.preventDefault();
-      drag.clientX = event.clientX;
-      drag.clientY = event.clientY;
-      drag.preview.style.left = `${event.clientX - drag.offsetX}px`;
-      drag.preview.style.top = `${event.clientY - drag.offsetY}px`;
+      drag.clientX = touch.clientX;
+      drag.clientY = touch.clientY;
+      if (drag.mode === "move") {
+        drag.preview.style.left = `${touch.clientX - drag.offsetX}px`;
+        drag.preview.style.top = `${touch.clientY - drag.offsetY}px`;
+      }
       updateBlockDropTarget(drag);
-    });
+    }, { passive: false });
 
-    document.addEventListener("pointerup", event => {
-      if (!activeBlockDrag || event.pointerId !== activeBlockDrag.pointerId) return;
+    document.addEventListener("touchend", event => {
+      if (pendingBlockTouch && [...event.changedTouches].some(touch => touch.identifier === pendingBlockTouch.id)) {
+        clearTimeout(pendingBlockTouch.timer);
+        pendingBlockTouch = null;
+      }
+      if (!activeBlockDrag || ![...event.changedTouches].some(touch => touch.identifier === activeBlockDrag.touchId)) return;
       const drag = clearBlockDrag();
+      suppressBlockClickUntil = Date.now() + 700;
       if (!drag.moved) return;
       suppressCalendarClick = true;
       setTimeout(() => { suppressCalendarClick = false; }, 0);
@@ -3607,26 +3690,45 @@
         showNotice("Suelta el bloque dentro de la cuadrícula horaria.");
         return;
       }
-      const result = moveScheduleOccurrence(drag.eventId, drag.fromDate, toDate, drag.dropStart);
+      const result = moveScheduleOccurrence(drag.eventId, drag.fromDate, toDate, drag.dropStart, drag.dropEnd);
       if (!result.moved) {
         if (result.error !== "No se pudo guardar el cambio.") showNotice(result.error || "No se pudo mover el bloque.");
         return;
       }
       selectedCalendarDay = (parseDate(toDate).getDay() + 6) % 7;
+      selectCalendarBlock(null);
       render();
+      const selected = [...calendarGrid.querySelectorAll(".event")].find(element =>
+        element.dataset.eventId === result.eventId && element.dataset.eventDate === toDate);
+      if (selected) selectCalendarBlock(selected);
       if (result.archivedLogs) showNotice("Los registros que no caben en el bloque recortado se conservan en Actividad registrada.");
     });
 
-    document.addEventListener("pointercancel", event => {
-      if (!activeBlockDrag || event.pointerId !== activeBlockDrag.pointerId) return;
-      const drag = clearBlockDrag();
-      if (drag.moved) {
-        suppressCalendarClick = true;
-        setTimeout(() => { suppressCalendarClick = false; }, 0);
+    document.addEventListener("touchcancel", event => {
+      if (pendingBlockTouch && [...event.changedTouches].some(touch => touch.identifier === pendingBlockTouch.id)) {
+        clearTimeout(pendingBlockTouch.timer);
+        pendingBlockTouch = null;
+      }
+      if (activeBlockDrag && [...event.changedTouches].some(touch => touch.identifier === activeBlockDrag.touchId)) {
+        clearBlockDrag();
+        suppressBlockClickUntil = Date.now() + 700;
       }
     });
 
     document.getElementById("calendarGrid").addEventListener("click", event => {
+      if (Date.now() < suppressBlockClickUntil) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      const handle = event.target.closest("[data-resize]");
+      if (handle) {
+        const block = handle.closest(".event");
+        const item = state.schedule.find(entry => entry.id === block.dataset.eventId);
+        if (item) openEventDialog(item, block.dataset.eventDate);
+        return;
+      }
+      selectCalendarBlock(null);
       const addSlot = event.target.closest("[data-add-event-date]");
       if (addSlot) {
         openEventDialog(null, addSlot.dataset.addEventDate);
