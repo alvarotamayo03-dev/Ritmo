@@ -1160,6 +1160,13 @@
     .calendar-grid.week-mode .calendar-timeline .event-check-row,
     .calendar-grid.week-mode .calendar-timeline .event-actions { display: none; }
     .calendar-grid.week-mode .daily-reading { margin: 8px; }
+    .topbar .calendar-view-toggle { flex: 0 0 auto; margin: 0 0 0 auto; }
+    .app:not([data-active-view="calendario"]) .calendar-view-toggle { display: none; }
+    .app[data-active-view="calendario"] .calendar-grid.week-mode {
+      height: clamp(240px, calc(100vh - 165px), 1100px);
+      height: clamp(240px, calc(100dvh - 165px), 1100px);
+      max-height: none;
+    }
     #view-plan-semanal .weekly-plan-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     #view-plan-semanal .weekly-plan-form .field { gap: 7px; }
     #view-plan-semanal .weekly-plan-form .field label { font-size: 12px; }
@@ -1267,6 +1274,15 @@
     #showMoveEvent, #confirmMoveEvent { min-height: 44px; }
     #moveEventFields { margin-top: 12px; }
     @media (max-width: 660px) {
+      .app[data-active-view="calendario"] main { padding-left: 8px; padding-right: 8px; }
+      .app[data-active-view="calendario"] .topbar { align-items: center; margin-bottom: 8px; }
+      .topbar .calendar-view-toggle { gap: 1px; padding: 3px; }
+      .topbar .calendar-view-toggle button { min-height: 40px; padding: 6px 9px; font-size: 11px; white-space: nowrap; }
+      .app[data-active-view="calendario"] .calendar-grid.week-mode {
+        height: clamp(240px, calc(100vh - 180px - env(safe-area-inset-bottom)), 1100px);
+        height: clamp(240px, calc(100dvh - 180px - env(safe-area-inset-bottom)), 1100px);
+      }
+      .calendar-week-hint.visible { margin: 0 2px 6px; }
       .sidebar { padding: 6px 12px calc(6px + env(safe-area-inset-bottom)); }
       .nav button { min-height: 50px; border-radius: 14px; font-size: 11px; }
       .nav button.active { background: var(--accent-soft); color: var(--accent); }
@@ -1298,7 +1314,7 @@
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="app" data-active-view="calendario">
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark">R</div>
@@ -1320,6 +1336,10 @@
           <div class="eyebrow" id="eyebrow">Tu espacio personal</div>
           <h1 id="pageTitle">Hola, vamos paso a paso.</h1>
           <div class="today-label" id="todayLabel"></div>
+        </div>
+        <div class="calendar-view-toggle" role="group" aria-label="Vista del calendario">
+          <button type="button" id="calendarTodayView" aria-pressed="false">Hoy</button>
+          <button type="button" id="calendarWeekView" class="active" aria-pressed="true">Esta semana</button>
         </div>
         <div class="top-actions">
           <button class="settings-mobile-button" id="settingsMobileButton" type="button" aria-label="Abrir ajustes" title="Ajustes">⚙</button>
@@ -1370,12 +1390,8 @@
       </section>
 
       <section class="view active" id="view-calendario">
-        <div class="calendar-view-toggle" role="group" aria-label="Vista del calendario">
-          <button type="button" id="calendarTodayView" aria-pressed="false">Hoy</button>
-          <button type="button" id="calendarWeekView" class="active" aria-pressed="true">Esta semana</button>
-        </div>
         <div class="mobile-day-picker" id="mobileDayPicker" aria-label="Elegir día"></div>
-        <div class="calendar-week-hint" id="calendarWeekHint">Mantén pulsado un bloque un segundo para moverlo. Suéltalo y arrastra sus extremos para ajustar la duración.</div>
+        <div class="calendar-week-hint" id="calendarWeekHint">Mantén pulsado un bloque para moverlo o ajustar su duración.</div>
         <div class="calendar-grid" id="calendarGrid"></div>
         <div class="schedule-controls calendar-week-navigation">
           <button class="button small" id="prevWeek">← Semana anterior</button>
