@@ -74,7 +74,6 @@
     .button.primary { border-color: var(--green); background: var(--green); color: #fff; }
     .button.primary:hover { background: #245c43; }
     .button.small { padding: 7px 10px; }
-    .top-actions .button, .top-actions label { padding: 7px 9px; }
     .top-actions { display: flex; gap: 8px; align-items: center; }
     .view { display: none; }
     .view.active { display: block; }
@@ -190,6 +189,8 @@
     @media (pointer: coarse) {
       .event { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
     }
+    .calendar-grid.week-mode .event-drag-area { touch-action: none; }
+    .calendar-grid.week-mode.is-moving-block { scroll-snap-type: none; }
     .event.is-being-dragged { opacity: .3; }
     .event-drag-preview { position: fixed; z-index: 20; pointer-events: none; opacity: .92; box-shadow: 0 8px 24px #24364b33; transform: rotate(-2deg); }
     .day-column.drop-target { background-color: #edf5ff !important; box-shadow: inset 0 0 0 2px #8eadd5; }
@@ -250,7 +251,7 @@
     .settings-goal-row { display: grid; grid-template-columns: minmax(0, 1fr) 100px 100px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #edf0f3; font-size: 11px; }
     .settings-goal-row label, .settings-toggle-row { display: flex; align-items: center; gap: 8px; }
     .settings-goal-row input[type="checkbox"], .settings-toggle-row input[type="checkbox"] { accent-color: var(--green); }
-    .settings-goal-row input[type="number"] { width: 100%; }
+    .settings-goal-row input[type="number"], .settings-goal-row select { width: 100%; }
     .settings-goal-row small { color: var(--muted); font-size: 10px; }
     .settings-toggle-row { min-height: 36px; font-size: 11px; }
     .settings-toggle-row input { accent-color: var(--green); }
@@ -343,7 +344,6 @@
       .milestone-form > button { grid-column: 1 / -1; }
       .topbar { align-items: flex-start; }
       .top-actions { flex-direction: row; align-items: center; justify-content: flex-end; gap: 5px; flex-wrap: wrap; }
-      .top-actions .button, .top-actions label { padding: 6px 7px; font-size: 10px; }
       .week-label { min-width: 140px; }
       .schedule-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
       .schedule-controls .week-label { grid-column: 1 / -1; grid-row: 1; min-width: 0; padding: 4px; }
@@ -550,7 +550,6 @@
       h1 { font-size: 22px; }
       .today-label { margin-top: 5px; font-size: 11px; }
       .top-actions { justify-content: flex-start; gap: 6px; }
-      .top-actions .button, .top-actions label { min-height: 36px; padding: 7px 9px; font-size: 10px; }
       .card { border-radius: 14px; }
       .panel { padding: 15px; }
       .section-heading { margin-top: 18px; }
@@ -914,8 +913,6 @@
       .calendar-grid.week-mode .day-column.today { background: #f9fbfd; }
       .calendar-week-navigation { border-top-color: #eef1f5; }
       .app[data-active-view="plan-semanal"] .top-actions { display: flex; }
-      .app[data-active-view="plan-semanal"] #exportButton,
-      .app[data-active-view="plan-semanal"] label[for="importFile"] { display: none; }
     }
     [data-theme="dark"] body { background: var(--page-background); color: var(--text-primary); }
     [data-theme="dark"] .sidebar,
@@ -1093,6 +1090,7 @@
     .section-edit { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; }
     .section-edit:hover { color: var(--green); }
     .day-head { width: 100%; border: 0; border-bottom: 1px solid var(--border-subtle); background: transparent; text-align: left; }
+    .calendar-grid.today-mode .day-head { padding-left: 12px; padding-right: 12px; }
     .day-head:hover .day-name { color: var(--accent); }
     .nav-icon { display: block; width: 21px; height: 21px; flex: 0 0 21px; }
     .nav-icon svg { display: block; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -1131,6 +1129,24 @@
     .calendar-grid.week-mode:not(.today-mode) .event { margin: 0; }
     .calendar-grid .event + .event,
     .calendar-grid.week-mode:not(.today-mode) .event + .event { margin-top: 4px; }
+    .calendar-grid.week-mode { max-height: min(70vh, 800px); overflow: auto; overscroll-behavior: contain; }
+    .calendar-grid.week-mode .day-column { display: block; padding: 0; }
+    .calendar-grid.week-mode .day-head { position: sticky; top: 0; z-index: 4; min-height: 48px; margin: 0; padding: 4px 8px 8px; background: var(--surface); }
+    .calendar-timeline { position: relative; height: 1728px; background: repeating-linear-gradient(to bottom, var(--border-subtle) 0 1px, transparent 1px 72px); }
+    .calendar-hour { position: absolute; left: 3px; z-index: 1; color: var(--text-secondary); font-size: 9px; line-height: 12px; pointer-events: none; }
+    .calendar-drop-marker { position: absolute; z-index: 3; left: 35px; right: 3px; border-top: 2px solid var(--accent); color: var(--accent); font-size: 11px; font-weight: 700; pointer-events: none; }
+    .calendar-grid.week-mode .calendar-timeline .event {
+      position: absolute; left: 36px; right: 3px; box-sizing: border-box; overflow: hidden;
+      margin: 0; padding: 2px 3px; border-radius: 6px;
+    }
+    .calendar-grid.week-mode .calendar-timeline .event + .event { margin-top: 0; }
+    .calendar-grid.week-mode .calendar-timeline .event-time,
+    .calendar-grid.week-mode .calendar-timeline .event-title { font-size: 10px; line-height: 13px; margin: 0; }
+    .calendar-grid.week-mode .calendar-timeline .event.very-short .event-time { display: none; }
+    .calendar-grid.week-mode .calendar-timeline .event.very-short .event-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .calendar-grid.week-mode .calendar-timeline .event-check-row,
+    .calendar-grid.week-mode .calendar-timeline .event-actions { display: none; }
+    .calendar-grid.week-mode .daily-reading { margin: 8px; }
     #view-plan-semanal .weekly-plan-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     #view-plan-semanal .weekly-plan-form .field { gap: 7px; }
     #view-plan-semanal .weekly-plan-form .field label { font-size: 12px; }
@@ -1200,8 +1216,10 @@
     .settings-section h3 { margin-bottom: 10px; font-size: 15px; }
     .settings-section .summary-goal-hint { font-size: 12px; line-height: 1.5; }
     .settings-goal-row { grid-template-columns: minmax(0, 1fr) 92px auto; gap: 10px; min-width: 0; padding: 12px 0; border-color: var(--border-subtle); font-size: 13px; }
+    [data-settings-section="activity"] .settings-goal-row { grid-template-columns: minmax(0, 150px) auto; }
+    [data-settings-section="activity"] .settings-goal-row > label { grid-column: 1 / -1; }
     .settings-goal-row[data-settings-goal-row] > label:first-child { grid-column: 1 / -1; justify-content: space-between; font-weight: 600; }
-    .settings-goal-row input[type="number"] { min-height: 44px; }
+    .settings-goal-row input[type="number"], .settings-goal-row select { min-height: 44px; }
     .settings-goal-row[data-settings-goal-row] input[type="number"] { grid-column: 1; width: min(100%, 120px); }
     .settings-goal-row[data-settings-goal-row] small { grid-column: 2 / -1; font-size: 12px; }
     .settings-goal-row .settings-goal-mode { min-height: 44px; justify-content: space-between; font-size: 12px; }
@@ -1241,7 +1259,6 @@
       .nav button.active { background: var(--accent-soft); color: var(--accent); }
       .topbar { gap: 8px; }
       .settings-mobile-button { min-width: 44px; min-height: 44px; }
-      .top-actions .button, .top-actions label { min-height: 40px; }
       .field input, .field select, .field textarea, .settings-dialog input[type="number"], .settings-sport-add input { font-size: 16px; }
       .calendar-grid.week-mode { grid-auto-columns: minmax(168px, 44vw); }
       .calendar-grid.week-mode:not(.today-mode) .event-hours select { min-height: 36px; font-size: 12px; }
@@ -1253,6 +1270,7 @@
       }
       .settings-section { padding: 14px; margin-top: 14px; }
       .settings-goal-row { grid-template-columns: minmax(0, 1fr) 76px auto; }
+      #settingsDailyStudyTarget { font-size: 16px; }
       .settings-dialog .dialog-actions { display: grid; grid-template-columns: 1fr 1fr; }
       .settings-dialog .dialog-actions .button { min-width: 0; padding: 10px 8px; }
       .custom-goal-dialog { inset: auto 0 0; width: 100%; max-width: none; max-height: 90dvh; margin: 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; }
@@ -1292,9 +1310,6 @@
         </div>
         <div class="top-actions">
           <button class="settings-mobile-button" id="settingsMobileButton" type="button" aria-label="Abrir ajustes" title="Ajustes">⚙</button>
-          <button class="button" id="exportButton" type="button">Guardar copia</button>
-          <label class="button" for="importFile" style="text-align:center">Importar copia</label>
-          <input id="importFile" type="file" accept="application/json,.json" hidden>
         </div>
       </header>
 
@@ -1347,7 +1362,7 @@
           <button type="button" id="calendarWeekView" class="active" aria-pressed="true">Esta semana</button>
         </div>
         <div class="mobile-day-picker" id="mobileDayPicker" aria-label="Elegir día"></div>
-        <div class="calendar-week-hint" id="calendarWeekHint">Arrastra un bloque a otro día o tócalo para moverlo.</div>
+        <div class="calendar-week-hint" id="calendarWeekHint">Arrastra un bloque al día y hora deseados. Tócalo para editarlo o cambiar su duración.</div>
         <div class="calendar-grid" id="calendarGrid"></div>
         <div class="schedule-controls calendar-week-navigation">
           <button class="button small" id="prevWeek">← Semana anterior</button>
@@ -1476,6 +1491,8 @@
         <div class="field"><label for="eventStart">Desde</label><input id="eventStart" type="time" required></div>
         <div class="field"><label for="eventEnd">Hasta</label><input id="eventEnd" type="time" required></div>
       </div>
+      <div class="field"><label for="eventDuration">Duración</label><select id="eventDuration" aria-label="Duración del bloque"></select></div>
+      <div id="eventCompletionArea" class="event" hidden></div>
       <div class="field"><label for="eventDate">Fecha (opcional; si la dejas vacía se repite cada semana)</label><input id="eventDate" type="date"></div>
       <div id="moveEventControls" hidden>
         <button class="button" type="button" id="showMoveEvent">Mover este bloque a otro día</button>
@@ -1505,7 +1522,7 @@
         <h3>Meta diaria del gráfico</h3>
         <div class="settings-goal-row">
           <label for="settingsDailyStudyTarget">Estudio, Programación y Alemán</label>
-          <input id="settingsDailyStudyTarget" type="number" min="0.25" max="24" step="0.25" aria-label="Meta diaria del gráfico en horas">
+          <select id="settingsDailyStudyTarget" aria-label="Meta diaria del gráfico en horas"></select>
           <small>horas / día</small>
         </div>
       </section>
@@ -1783,7 +1800,7 @@
       state = loadState();
     } catch (error) {
       state = freshState();
-      showNotice(`No se pudieron leer los datos guardados: ${error.message} Se mostrará el horario original; exporta una copia válida si la tienes.`);
+      showNotice(`No se pudieron leer los datos guardados: ${error.message} Se mostrará el horario original.`);
     }
 
     function showNotice(message) {
@@ -2453,6 +2470,7 @@
         : `<div class="milestone-empty">Aún no hay metas.</div>`;
     }
 
+    let weeklyCalendarScrollTop = 6 * 72;
     function renderCalendar() {
       const start = startOfWeek(calendarAnchor);
       document.getElementById("calendarTodayView").classList.toggle("active", calendarMode === "day");
@@ -2470,6 +2488,7 @@
         return `<button type="button" class="${isSelected ? "active" : ""}" data-calendar-day="${index}" aria-pressed="${isSelected}" aria-label="${day} ${formatDate(date, { day: "numeric", month: "long" })}${isToday ? ", hoy" : ""}">${SHORT_DAYS[index]}<span>${formatDate(date, { day: "numeric" })}${isToday ? " ·" : ""}</span></button>`;
       }).join("");
       const calendarGrid = document.getElementById("calendarGrid");
+      if (calendarGrid.classList.contains("week-mode")) weeklyCalendarScrollTop = calendarGrid.scrollTop;
       calendarGrid.classList.toggle("today-mode", calendarMode === "day");
       calendarGrid.classList.toggle("week-mode", calendarMode === "week");
       document.getElementById("calendarWeekHint").classList.toggle("visible", calendarMode === "week");
@@ -2480,6 +2499,7 @@
           .sort((a, b) => a.start.localeCompare(b.start));
         return `<article class="day-column ${dateKey(date) === today ? "today" : ""} ${index === selectedCalendarDay ? "selected" : ""}" data-calendar-date="${dateKey(date)}">
           <button type="button" class="day-head" data-add-event-date="${dateKey(date)}" aria-label="Añadir bloque el ${day} ${formatDate(date, { day: "numeric", month: "long" })}" title="Añadir bloque"><span class="day-name">${day}</span><span class="day-number">${formatDate(date, { day: "numeric", month: "short" })}</span></button>
+          ${calendarMode === "week" ? `<div class="calendar-timeline">${Array.from({ length: 24 }, (_, hour) => `<span class="calendar-hour" style="top:${hour * 72}px">${String(hour).padStart(2, "0")}:00</span>`).join("")}` : ""}
           ${events.length ? events.map(event => {
             const sourceKey = `schedule:${event.id}@${dateKey(date)}`;
               const category = scheduleCategory(event.title);
@@ -2495,9 +2515,15 @@
               const visualCategory = inferredActivityCategory(event) === "sport"
                 ? "training"
                 : completed && scheduleLog ? scheduleLog.category : category;
-              return `<div class="event ${completed ? "completed" : ""}" data-event-id="${escapeHtml(event.id)}" data-event-date="${dateKey(date)}" data-category="${visualCategory}" title="Pulsa para editar este bloque">
-              <div class="event-time">${escapeHtml(event.start)}–${escapeHtml(event.end)}</div>
-              <div class="event-title">${escapeHtml(event.title)}</div>
+              const startMinutes = Number(event.start.slice(0, 2)) * 60 + Number(event.start.slice(3));
+              const timelineStyle = calendarMode === "week"
+                ? `style="top:${startMinutes * 1.2}px;height:${maxDurationMinutes * 1.2}px"`
+                : "";
+              return `<div class="event ${completed ? "completed" : ""} ${maxDurationMinutes < 25 ? "very-short" : ""}" data-event-id="${escapeHtml(event.id)}" data-event-date="${dateKey(date)}" data-category="${visualCategory}" ${timelineStyle} title="Pulsa para editar este bloque">
+              <div class="event-drag-area">
+                <div class="event-time">${escapeHtml(event.start)}–${escapeHtml(event.end)}</div>
+                <div class="event-title">${escapeHtml(event.title)}</div>
+              </div>
               ${isTrackableScheduleCategory(logCategory) ? `<div class="event-check-row">
                 <label class="event-check"><input type="checkbox" aria-label="Marcar ${escapeHtml(event.title)} como completada" data-schedule-check="${escapeHtml(event.id)}" data-schedule-date="${dateKey(date)}" ${completed ? "checked" : ""}></label>
                 ${tracksHours ? `<div class="event-hours">
@@ -2512,7 +2538,8 @@
                 <button class="icon-button" type="button" aria-label="Eliminar ${escapeHtml(event.title)}" data-delete-event="${escapeHtml(event.id)}">×</button>
               </div>
           </div>`;
-          }).join("") : `<div class="no-events">Día libre</div>`}
+          }).join("") : calendarMode === "day" ? `<div class="no-events">Día libre</div>` : ""}
+          ${calendarMode === "week" ? "</div>" : ""}
           ${(() => {
             const readingSourceKey = `reading:${dateKey(date)}`;
             const readingDone = state.logs.some(log => log.date === dateKey(date) && log.category === "reading" && log.done);
@@ -2523,7 +2550,10 @@
           })()}
         </article>`;
       }).join("");
-      if (calendarMode === "week") calendarGrid.scrollLeft = previousScrollLeft;
+      if (calendarMode === "week") {
+        calendarGrid.scrollLeft = previousScrollLeft;
+        calendarGrid.scrollTop = weeklyCalendarScrollTop;
+      }
     }
 
     function renderWeeklyPlan(start) {
@@ -3309,7 +3339,33 @@
     activityCategorySelect.addEventListener("change", updateSportFields);
     sportTypeSelect.addEventListener("change", updateSportFields);
 
-    function openEventDialog(item, selectedDate = null) {
+    function updateEventDuration() {
+      const start = document.getElementById("eventStart").value;
+      const end = document.getElementById("eventEnd").value;
+      const select = document.getElementById("eventDuration");
+      const minutes = start && end ? scheduledDurationMinutes({ start, end }) : 0;
+      const custom = minutes > 0 && minutes <= 1425 && minutes % 15
+        ? `<option value="${minutes / 60}" selected>${formatDurationHours(minutes / 60)}</option>`
+        : "";
+      select.innerHTML = `<option value="">Elegir duración</option>${custom}${durationOptions(minutes / 60, 1425)}`;
+      select.value = minutes > 0 ? String(minutes / 60) : "";
+    }
+
+    document.getElementById("eventDuration").addEventListener("change", event => {
+      const start = document.getElementById("eventStart").value;
+      if (!start || !event.target.value) return;
+      const end = Number(start.slice(0, 2)) * 60 + Number(start.slice(3)) + Number(event.target.value) * 60;
+      if (end >= 1440) {
+        showNotice("La duración debe terminar antes de medianoche.");
+        updateEventDuration();
+        return;
+      }
+      document.getElementById("eventEnd").value = `${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`;
+    });
+    document.getElementById("eventStart").addEventListener("change", updateEventDuration);
+    document.getElementById("eventEnd").addEventListener("change", updateEventDuration);
+
+    function openEventDialog(item, selectedDate = null, selectedHour = null) {
       document.getElementById("eventDialogTitle").textContent = item ? "Editar bloque" : "Añadir bloque al horario";
       document.getElementById("eventId").value = item ? item.id : "";
       document.getElementById("eventTitle").value = item ? item.title : "";
@@ -3323,21 +3379,46 @@
         ? findFreeSlot(parseDate(selectedDate), 60, state.schedule.filter(event => scheduleOccursOnDate(event, parseDate(selectedDate))))
         : null;
       document.getElementById("eventDay").value = String(day);
-      document.getElementById("eventStart").value = item ? item.start : freeSlot?.start || "09:00";
-      document.getElementById("eventEnd").value = item ? item.end : freeSlot?.end || "10:00";
+      document.getElementById("eventStart").value = item ? item.start : selectedHour !== null ? `${String(selectedHour).padStart(2, "0")}:00` : freeSlot?.start || "09:00";
+      document.getElementById("eventEnd").value = item ? item.end : selectedHour !== null
+        ? selectedHour === 23 ? "23:45" : `${String(selectedHour + 1).padStart(2, "0")}:00`
+        : freeSlot?.end || "10:00";
+      updateEventDuration();
       document.getElementById("eventDate").value = date;
       editingEventOccurrence = item ? selectedDate || item.date || "" : "";
+      const completionArea = document.getElementById("eventCompletionArea");
+      const calendarEvent = item && editingEventOccurrence
+        ? [...calendarGrid.querySelectorAll(".event")].find(element =>
+          element.dataset.eventId === item.id && element.dataset.eventDate === editingEventOccurrence)
+        : null;
+      const completion = calendarEvent?.querySelector(".event-check-row");
+      const actions = calendarEvent?.querySelector(".event-actions");
+      completionArea.hidden = !calendarEvent;
+      completionArea.innerHTML = `${completion ? completion.outerHTML : ""}${actions ? actions.outerHTML : ""}`;
+      completionArea.querySelectorAll("[id]").forEach(element => element.removeAttribute("id"));
       document.getElementById("moveEventControls").hidden = !editingEventOccurrence;
       document.getElementById("moveEventFields").hidden = true;
       document.getElementById("moveEventStatus").textContent = "";
       document.getElementById("moveEventDate").value = editingEventOccurrence;
       eventDialog.showModal();
     }
-    function moveScheduleOccurrence(eventId, fromDate, toDate) {
+    document.getElementById("eventCompletionArea").addEventListener("click", event => {
+      if (event.target.closest("[data-delete-event]")) eventDialog.close();
+    });
+    function moveScheduleOccurrence(eventId, fromDate, toDate, newStart = null) {
       const event = state.schedule.find(item => item.id === eventId);
       if (!event) return { moved: false, error: "No se encontró el bloque." };
       if (!scheduleOccursOnDate(event, parseDate(fromDate))) return { moved: false, error: "El bloque ya no está en ese día." };
-      if (fromDate === toDate) return { moved: true };
+      if (fromDate === toDate && (newStart === null || newStart === event.start)) return { moved: true, archivedLogs: 0 };
+      const duration = scheduledDurationMinutes(event);
+      const startMinutes = newStart === null ? null : Number(newStart.slice(0, 2)) * 60 + Number(newStart.slice(3));
+      if (startMinutes !== null && (!Number.isFinite(startMinutes) || startMinutes < 0 || startMinutes + duration >= 1440)) {
+        return { moved: false, error: "El bloque debe terminar antes de medianoche. Elige una hora anterior." };
+      }
+      const movedTimes = startMinutes === null ? {} : {
+        start: newStart,
+        end: `${String(Math.floor((startMinutes + duration) / 60)).padStart(2, "0")}:${String((startMinutes + duration) % 60).padStart(2, "0")}`
+      };
       const targetDate = parseDate(toDate);
       const scheduleBefore = state.schedule.map(item => ({
         ...item,
@@ -3351,11 +3432,11 @@
       let movedEvent;
       if (event.date) {
         state.schedule = state.schedule.filter(item => item.id !== eventId);
-        movedEvent = { ...event, date: toDate, day: (targetDate.getDay() + 6) % 7 };
+        movedEvent = { ...event, ...movedTimes, date: toDate, day: (targetDate.getDay() + 6) % 7 };
       } else {
         const excludedDates = Array.isArray(event.excludedDates) ? event.excludedDates : [];
         event.excludedDates = [...new Set([...excludedDates, fromDate])];
-        movedEvent = { ...event, id: crypto.randomUUID(), date: toDate, day: (targetDate.getDay() + 6) % 7 };
+        movedEvent = { ...event, ...movedTimes, id: crypto.randomUUID(), date: toDate, day: (targetDate.getDay() + 6) % 7 };
         delete movedEvent.excludedDates;
         movedEventId = movedEvent.id;
       }
@@ -3409,9 +3490,12 @@
       if (!activeBlockDrag) return null;
       const drag = activeBlockDrag;
       activeBlockDrag = null;
+      cancelAnimationFrame(drag.scrollFrame);
+      calendarGrid.classList.remove("is-moving-block");
       drag.source.classList.remove("is-being-dragged");
       drag.preview?.remove();
       drag.dropTarget?.classList.remove("drop-target");
+      drag.marker?.remove();
       return drag;
     }
 
@@ -3430,46 +3514,86 @@
         offsetY: event.clientY - source.getBoundingClientRect().top,
         moved: false,
         preview: null,
-        dropTarget: null
+        dropTarget: null,
+        marker: null,
+        scrollFrame: 0,
+        dropStart: null,
+        clientX: event.clientX,
+        clientY: event.clientY
       };
     });
 
-    document.addEventListener("pointermove", event => {
-      const drag = activeBlockDrag;
-      if (!drag || event.pointerId !== drag.pointerId) return;
-      const deltaX = event.clientX - drag.startX;
-      const deltaY = event.clientY - drag.startY;
-      if (!drag.moved && (Math.abs(deltaX) < 8 || Math.abs(deltaX) < Math.abs(deltaY) * 1.15)) return;
-      if (!drag.moved) {
-        drag.moved = true;
-        const bounds = drag.source.getBoundingClientRect();
-        drag.preview = drag.source.cloneNode(true);
-        drag.preview.classList.remove("is-being-dragged");
-        drag.preview.classList.add("event-drag-preview");
-        drag.preview.querySelector(".event-actions")?.remove();
-        drag.preview.style.width = `${bounds.width}px`;
-        drag.preview.style.left = `${bounds.left}px`;
-        drag.preview.style.top = `${bounds.top}px`;
-        document.body.append(drag.preview);
-        drag.source.classList.add("is-being-dragged");
-      }
-      event.preventDefault();
-      drag.preview.style.left = `${event.clientX - drag.offsetX}px`;
-      drag.preview.style.top = `${event.clientY - drag.offsetY}px`;
-
-      const gridBounds = calendarGrid.getBoundingClientRect();
-      if (calendarGrid.scrollWidth > calendarGrid.clientWidth && event.clientX < gridBounds.left + 28) {
-        calendarGrid.scrollLeft -= 12;
-      } else if (calendarGrid.scrollWidth > calendarGrid.clientWidth && event.clientX > gridBounds.right - 28) {
-        calendarGrid.scrollLeft += 12;
-      }
-      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".day-column");
+    function updateBlockDropTarget(drag) {
+      const target = document.elementFromPoint(drag.clientX, drag.clientY)?.closest(".day-column");
       const dropTarget = target && calendarGrid.contains(target) ? target : null;
       if (drag.dropTarget !== dropTarget) {
         drag.dropTarget?.classList.remove("drop-target");
         drag.dropTarget = dropTarget;
         drag.dropTarget?.classList.add("drop-target");
       }
+      const timeline = dropTarget?.querySelector(".calendar-timeline");
+      const top = timeline?.getBoundingClientRect().top;
+      const bounds = timeline?.getBoundingClientRect();
+      const hour = bounds && drag.clientY >= bounds.top && drag.clientY <= bounds.bottom
+        ? Math.round((drag.clientY - drag.offsetY - top) / 72) : -1;
+      drag.dropStart = hour >= 0 && hour <= 23
+        ? `${String(hour).padStart(2, "0")}:00`
+        : null;
+      if (drag.dropStart) {
+        if (!drag.marker) {
+          drag.marker = document.createElement("div");
+          drag.marker.className = "calendar-drop-marker";
+        }
+        timeline.append(drag.marker);
+        drag.marker.style.top = `${hour * 72}px`;
+        drag.marker.textContent = drag.dropStart;
+      } else {
+        drag.marker?.remove();
+      }
+    }
+
+    function scrollBlockDrag(drag) {
+      if (activeBlockDrag !== drag || !drag.moved) return;
+      const bounds = calendarGrid.getBoundingClientRect();
+      if (drag.clientY >= bounds.top && drag.clientY <= bounds.bottom &&
+          drag.clientX >= bounds.left && drag.clientX <= bounds.right) {
+        if (drag.clientX < bounds.left + 32) calendarGrid.scrollLeft -= 8;
+        else if (drag.clientX > bounds.right - 32) calendarGrid.scrollLeft += 8;
+      }
+      if (drag.clientY >= bounds.top && drag.clientY < bounds.top + 55) calendarGrid.scrollTop -= 8;
+      else if (drag.clientY <= bounds.bottom && drag.clientY > bounds.bottom - 55) calendarGrid.scrollTop += 8;
+      updateBlockDropTarget(drag);
+      drag.scrollFrame = requestAnimationFrame(() => scrollBlockDrag(drag));
+    }
+
+    document.addEventListener("pointermove", event => {
+      const drag = activeBlockDrag;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      const deltaX = event.clientX - drag.startX;
+      const deltaY = event.clientY - drag.startY;
+      if (!drag.moved && Math.hypot(deltaX, deltaY) < 8) return;
+      if (!drag.moved) {
+        drag.moved = true;
+        const bounds = drag.source.getBoundingClientRect();
+        drag.preview = drag.source.cloneNode(true);
+        drag.preview.classList.remove("is-being-dragged");
+        drag.preview.classList.add("event-drag-preview");
+        drag.preview.setAttribute("aria-hidden", "true");
+        drag.preview.querySelector(".event-actions")?.remove();
+        drag.preview.style.width = `${bounds.width}px`;
+        drag.preview.style.left = `${bounds.left}px`;
+        drag.preview.style.top = `${bounds.top}px`;
+        document.body.append(drag.preview);
+        drag.source.classList.add("is-being-dragged");
+        calendarGrid.classList.add("is-moving-block");
+        drag.scrollFrame = requestAnimationFrame(() => scrollBlockDrag(drag));
+      }
+      event.preventDefault();
+      drag.clientX = event.clientX;
+      drag.clientY = event.clientY;
+      drag.preview.style.left = `${event.clientX - drag.offsetX}px`;
+      drag.preview.style.top = `${event.clientY - drag.offsetY}px`;
+      updateBlockDropTarget(drag);
     });
 
     document.addEventListener("pointerup", event => {
@@ -3479,8 +3603,11 @@
       suppressCalendarClick = true;
       setTimeout(() => { suppressCalendarClick = false; }, 0);
       const toDate = drag.dropTarget?.dataset.calendarDate;
-      if (!toDate || toDate === drag.fromDate) return;
-      const result = moveScheduleOccurrence(drag.eventId, drag.fromDate, toDate);
+      if (!toDate || !drag.dropStart) {
+        showNotice("Suelta el bloque dentro de la cuadrícula horaria.");
+        return;
+      }
+      const result = moveScheduleOccurrence(drag.eventId, drag.fromDate, toDate, drag.dropStart);
       if (!result.moved) {
         if (result.error !== "No se pudo guardar el cambio.") showNotice(result.error || "No se pudo mover el bloque.");
         return;
@@ -3514,7 +3641,9 @@
       }
       const dayColumn = event.target.closest(".day-column");
       if (dayColumn && !event.target.closest(".day-head, .event, .daily-reading")) {
-        openEventDialog(null, dayColumn.dataset.calendarDate);
+        const timeline = event.target.closest(".calendar-timeline");
+        const hour = timeline ? Math.max(0, Math.min(23, Math.floor((event.clientY - timeline.getBoundingClientRect().top) / 72))) : null;
+        openEventDialog(null, dayColumn.dataset.calendarDate, hour);
       }
     });
     document.getElementById("cancelEvent").addEventListener("click", () => eventDialog.close());
@@ -3564,6 +3693,8 @@
           : {})
       };
       if (id) {
+        const existing = state.schedule.find(event => event.id === id);
+        if (!item.date && Array.isArray(existing?.excludedDates)) item.excludedDates = [...existing.excludedDates];
         state.schedule = state.schedule.map(existing => existing.id === id ? item : existing);
         syncScheduledEventLogs(id);
       }
@@ -3589,10 +3720,16 @@
     function openSettings(section = "", goalKey = "") {
       settingsSportsDraft = [...state.settings.customSports];
       visibleSportsDraft = [...state.settings.visibleSports];
-      document.getElementById("settingsDailyStudyTarget").value = state.settings.dailyStudyTarget ?? "";
-      document.getElementById("settingsDailyStudyTarget").placeholder = (
-        ((Number(state.settings.goals.study) || 36) + (Number(state.settings.goals.german) || 5)) / 7
-      ).toFixed(2);
+      const dailyTarget = state.settings.dailyStudyTarget;
+      const dailyTargetSelect = document.getElementById("settingsDailyStudyTarget");
+      const savedTargetOption = dailyTarget !== null && !Number.isInteger(dailyTarget * 4)
+        ? `<option value="${dailyTarget}">Actual: ${String(dailyTarget).replace(".", ",")}</option>`
+        : "";
+      dailyTargetSelect.innerHTML = `<option value="">Automática</option>${savedTargetOption}${Array.from({ length: 96 }, (_, index) => {
+        const value = (index + 1) / 4;
+        return `<option value="${value}">${String(value).replace(".", ",")}</option>`;
+      }).join("")}`;
+      dailyTargetSelect.value = dailyTarget ?? "";
       document.getElementById("settingsGoalList").innerHTML = WEEKLY_GOALS.map(goal => {
         const target = state.settings.goals[goal.key] || goal.goal;
         const step = goal.unit === "h" ? "0.25" : "1";
@@ -4100,36 +4237,6 @@
       if (periodMode === "week") calendarAnchor = new Date(periodAnchor);
       renderHome();
       renderProgress();
-    });
-
-    document.getElementById("exportButton").addEventListener("click", () => {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `ritmo-copia-${dateKey(new Date())}.json`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
-    document.getElementById("importFile").addEventListener("change", async event => {
-      const file = event.target.files[0];
-      if (!file) return;
-      try {
-        const imported = JSON.parse(await file.text());
-        if (!imported || !Array.isArray(imported.schedule) || !Array.isArray(imported.tasks) || !Array.isArray(imported.logs) || !imported.notes || typeof imported.notes !== "object") {
-          throw new Error("El archivo no parece una copia válida de Ritmo.");
-        }
-        if (!imported.weekNotes || typeof imported.weekNotes !== "object") imported.weekNotes = {};
-        if (!imported.weekPlans || typeof imported.weekPlans !== "object") imported.weekPlans = {};
-        if (!Array.isArray(imported.milestones)) imported.milestones = [];
-        imported.milestones = normalizeMilestones(imported.milestones);
-        imported.settings = normalizeSettings(imported.settings, imported.logs, imported.schedule);
-        state = imported;
-        if (saveState()) render();
-      } catch (error) {
-        showNotice(`No se pudo importar el archivo: ${error.message}`);
-      } finally {
-        event.target.value = "";
-      }
     });
 
     render();
